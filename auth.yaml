@@ -1,0 +1,25 @@
+cookie:
+  expiry_days: 30
+  key: random_signature_key
+  name: random_cookie_name
+credentials:
+  usernames:
+    j:
+      email: jsmith@gmail.com
+      name: John Smith
+      password: abc
+    peiyi x:
+      email: XDDEmbrace@163.com
+      name: XDD
+      password: $2b$12$B2eR4GZDPJg2FYHcJx1NBeARLrEtb525nvUwfkx2Z8IxlluaHGcdq
+    www:
+      email: WWW
+      name: WWW
+      password: $2b$12$BP0PkAoFlbTixskvqWFJZejWI.m2Ab/YI6NXkR1PKZHv1CUspuEAG
+    zxd:
+      email: zhuxd1981@163.com
+      name: "\u6731\u5C0F\u680B"
+      password: $2b$12$eRYqfZsNqQMw/f8Fo.WvZu2xp3wivC8vQP9elFgvw10zotb4ZQKUu
+preauthorized:
+  emails:
+  - XDDEmbrace@163.com
