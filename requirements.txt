@@ -4,3 +4,4 @@ pandas
 beautifulsoup4
 streamlit
 streamlit_lottie
+streamlit_option_menu
