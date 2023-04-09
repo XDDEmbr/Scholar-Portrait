@@ -2,9 +2,8 @@ adjustText==0.8
 beautifulsoup4==4.12.2
 dask==2023.3.2
 faiss-gpu==1.7.1
+torch==1.7.1
 faiss==1.7.1
-libfaiss==1.7.1
-libfaiss-avx2==1.7.1
 geopy==2.3.0
 matplotlib==3.6.3
 networkx==3.0
