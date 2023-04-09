@@ -347,4 +347,3 @@ dependencies:
       - zope-event==4.6
       - zope-interface==5.5.2
       - zopfli==0.2.2
-prefix: D:\Anaconda\envs\ScholarPortrait
