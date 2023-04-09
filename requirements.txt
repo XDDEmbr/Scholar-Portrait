@@ -23,4 +23,4 @@ streamlit_lottie==0.0.3
 streamlit_option_menu==0.3.2
 tqdm==4.65.0
 wordcloud==1.8.2.2
-~treamlit==1.15.1
+streamlit==1.15.1
