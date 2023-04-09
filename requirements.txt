@@ -8,4 +8,5 @@ streamlit_option_menu
 PyYAML
 streamlit_authenticator
 pyodbc
-faiss
+faiss==1.7.1
+pip==23.0.1 
