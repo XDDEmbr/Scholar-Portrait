@@ -1,8 +1,6 @@
 name: base
 channels:
-  - pytorch
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+
   - defaults
   - conda-forge
 dependencies:
