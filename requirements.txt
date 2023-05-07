@@ -6,7 +6,7 @@ bertopic==0.14.1
 pathlib
 matplotlib
 numpy
-faiss==1.7.1
+faiss
 jieba==0.42.1
 sentence-transformers==2.2.2
 requests==2.28.1
