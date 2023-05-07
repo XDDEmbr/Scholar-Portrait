@@ -3,6 +3,7 @@ import sys
 import time
 import faiss
 import pandas as pd
+import numpy as np
 import streamlit as st
 from os.path import join
 from utils.auth import login_warning
@@ -43,12 +44,20 @@ def load_index():
         index = faiss.read_index(join(data_dir, "index.faiss"))
     return index
 
+@ st.cache_resource
+def load_scholar_data():
+    scholar_date = os.path.abspath(os.path.join(os.path.dirname(__file__), '..','dataset/Scholar.csv' ))
+    df_scholar = pd.read_csv(scholar_date,)
+    return df_scholar
+
+
 model = load_model()
 data = load_data()
+df_scholar = load_scholar_data()
 index = load_index()
 user_tags = load_user_tags()
 
-def draw_sidebar():
+def draw_paper_sidebar():
     """Should include dynamically generated filters"""
 
     with st.sidebar:
@@ -71,6 +80,24 @@ def draw_sidebar():
         global k    
         k = st.number_input("Number of results", 1, 50, 10)
 
+def draw_scholar_sidebar():
+    """Should include dynamically generated filters"""
+
+    with st.sidebar:
+        categories = df_scholar["school"].unique()
+
+        st.sidebar.header("Filters")
+        st.sidebar.subheader("By Category")
+
+        selected_categories = st.sidebar.multiselect("Select categories", categories)
+
+        if st.sidebar.button("Apply filters"):
+            st.session_state.selected_categories = selected_categories
+
+            # Reload the page
+            st.experimental_rerun()
+
+
 html_temp = """
                     <div style="background-color:{};padding:1px">
                     
@@ -82,16 +109,20 @@ def search_main():
     ## 🔍Scholar Search
     在ScholarPartrait中搜索你感兴趣的~
     """)
-    draw_sidebar()
+
     colselect, colsearch = st.columns([1,3])
     with colselect:
         selected_col = st.selectbox('',['学者','论文'])
+    if selected_col == "学者":
+        draw_scholar_sidebar()               
+    if selected_col == "论文":
+        draw_paper_sidebar() 
     with colsearch:
         query = st.text_input("Search in ScholarPartrait", placeholder="搜索学者、论文", disabled=False)
             
 
 
-    def show_search_result():
+    def show_search_paper_result():
         # 使用预训练的all-mpnet-base-v2模型对查询进行编码，得到查询的向量表示。
         # 然后使用这个向量表示和之前构建的索引，搜索最相关的文献。
         # 最后，将搜索结果整理成一个DataFrame，方便进行展示和筛选。
@@ -173,15 +204,54 @@ def search_main():
         # Show sucessful query message and tell how many documents we passed
         st.success(f"Found {len(I[0])} results in {end_time - start_time:.2f} seconds on database of {len(data)} papers.")
 
+    def show_search_scholar_result():
+        df_scholar.replace(np.nan, '', inplace=True)
+        result = df_scholar[df_scholar['name'].str.contains(query)]
+
+        html = ""
+        for _, row in result.iterrows():
+            html = "<table style='width:100%'>"
+            html += "<tr>"
+            html += "<td>"
+            if row['header_img']:
+                html += "<div style='display: flex; justify-content: center;'>"
+                html += f"<img src='{row['header_img']}' style='width:200px;height:200px;'>"
+                html += "</div>"
+            html += "</td>"
+            html += "<td>"
+            html += f"<h2>{row['name']}</h2>"
+            if row['title']:
+                html += f"<p><b>Title:</b> {row['title']}</p>"
+            if row['interest']:
+                html += f"<p><b>Interest:</b> {row['interest']}</p>"
+            if row['email']:
+                html += f"<p><b>Email:</b> {row['email']}</p>"
+            if row['homepage']:
+                html += f"<p><b>Homepage:</b> <a href='{row['homepage']}'>{row['homepage']}</a></p>"
+            if row['school']:
+                html += f"<p><b>School:</b> {row['school']}</p>"
+            if row['school_url']:
+                html += f"<p><b>School_url:</b> <a href='{row['school_url']}'>{row['school_url']}</a></p>"
+            if row['academy']:
+                html += f"<p><b>Academy:</b> {row['academy']}</p>"
+            if row['academy_url']:
+                html += f"<p><b>Academy_url:</b> <a href='{row['academy_url']}'>{row['academy_url']}</a></p>"
+            if row['department']:
+                html += f"<p><b>Department:</b> {row['department']}</p>"
+            html += "</td>"
+            html += "</tr>"
+            html += "</table>"
+
+        st.markdown(html, unsafe_allow_html=True)
+        #st.markdown("---")
+
     if query:
         with st.container():                
-            if selected_col == "学者":
-                tab1 = st.tabs(["👩‍🎓学者"])
+            if selected_col == "学者":               
+                show_search_scholar_result()
             if selected_col == "论文":
-                tab1,tab2 = st.tabs(["📃论文","👩‍🎓学者"])
-                with tab1:
-                    show_search_result()
-                #tab1, tab2, tab3 = st.tabs(["📃摘要","👩‍🎓学者", "🪧标题"])
+                show_search_paper_result()
+
 
 if __name__ == '__main__':
     if st.session_state.authentication_status:
