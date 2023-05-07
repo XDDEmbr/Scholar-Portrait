@@ -3,6 +3,7 @@ streamlit-lottie==0.0.3
 streamlit-option-menu==0.3.2
 streamlit-authenticator==0.2.1
 pandas==1.5.3
+pyodbc==4.0.34
 Pillow==9.4.0
 beautifulsoup4==4.11.1
 bertopic==0.14.1
