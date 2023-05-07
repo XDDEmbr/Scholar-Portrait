@@ -1,23 +1,11 @@
 import os
 import json
-import calendar
-import matplotlib
-import numpy as np
 import pandas as pd
-import networkx as nx
-import dask.bag as db
 import streamlit as st
-import dask.dataframe as dd
 import plotly.express as px
 import plotly.graph_objs as go
-from collections import Counter
-from adjustText import adjust_text
-from matplotlib import pyplot as plt
 from utils.auth import login_warning
 from plotly.subplots import make_subplots
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.decomposition import NMF, PCA, TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 arxiv_dataset = os.path.abspath(os.path.join(os.path.dirname(__file__), '..','dataset/', 'arxiv-metadata-oai-snapshot.json'))
