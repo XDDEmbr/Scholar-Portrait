@@ -1,19 +1,19 @@
 import os
 import io
-import json
+import jieba
 import random
-import pyodbc
-import datetime
 import pydeck as pdk
 import pandas as pd
 import streamlit as st
 import plotly.express as px
 from utils.scrap import Scarp
+from bertopic import BERTopic
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-from PIL import Image, ImageOps,ImageDraw
+from PIL import Image
 from utils.database import init_connection,QueryExecutor
-from streamlit_elements import elements, dashboard, mui, editor, media, lazy, sync, nivo
+from sklearn.feature_extraction.text import CountVectorizer
+from streamlit_elements import elements, dashboard, mui, nivo
 
 conn = init_connection()
 cur = conn.cursor()
@@ -27,6 +27,7 @@ result = cur.fetchone()
 if result is not None:
     scholar_name,scholar_gender,scholar_title,scholar_institution,scholar_department,scholar_email,scholar_homepage,scholar_bio,scholar_photo = result
     sch_photo = Image.open(io.BytesIO(scholar_photo))
+    
 # 查询研究兴趣
 cur.execute('SELECT interest_name FROM Interest WHERE scholar_id=?', (scholar_id,))
 result = cur.fetchall() 
@@ -214,6 +215,44 @@ def show_portrait():
         for row in pub:            
             st.write(f'- 📗 <a href="{row[9]}"><span style="color:rgba(6, 137, 244, 0.867)">{row[0]}</span></a>.{scholar_name},{row[5]}.<span style="color:#6A5ACD">{row[3]}</span>.{str(row[1])}', unsafe_allow_html=True)
     public = pd.DataFrame(pub,columns=('title','year','type','journal','publisher','coauthors','doi','abstract','keywords','link'))
+    with st.expander('研究兴趣变化趋势'):
+        def preprocess_text(text):
+        # 分词
+            words = jieba.lcut(text)
+        # 去除停用词
+            with open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','dataset/stopwords.txt' )), encoding='utf-8') as f:
+                stop_words = [line.strip() for line in f]
+                words = [word for word in words if word not in stop_words]
+        # 拼接单词
+            return ' '.join(words)
+        df_pub = public
+        df_pub['processed_title'] = df_pub['title'].apply(preprocess_text)
+        df_pub['processed_abstract'] = df_pub['abstract'].apply(preprocess_text)
+        df_pub['processed_keywords'] = df_pub['keywords'].apply(preprocess_text)
+        vectorizer = CountVectorizer()
+        corpus = df_pub['processed_title'] + ' ' + df_pub['processed_abstract'] + ' ' + df_pub['processed_keywords']
+        corpus = df_pub['processed_title']  + ' ' + df_pub['processed_keywords']
+        X = vectorizer.fit_transform(corpus)
+        model = BERTopic(verbose=True, embedding_model="paraphrase-MiniLM-L12-v2",min_topic_size=2,language='chinese (simplified)')
+        topics, _ = model.fit_transform(corpus)
+        df_pub['topic'] = topics
+        barchart_data = model.visualize_barchart(top_n_topics=10, height=300)
+        st.plotly_chart(barchart_data)
+
+        year = sorted(df_pub['year'].tolist())
+        topics_over_time = model.topics_over_time(docs=df_pub.abstract, timestamps=year, nr_bins=10, datetime_format='%Y')
+        river_data = model.visualize_topics_over_time(topics_over_time, top_n_topics=10, width=900, height=500)
+        st.plotly_chart(river_data)
+
+        categories = df_pub['type'].tolist()
+        topics_per_class = model.topics_per_class(df_pub.abstract, topics,categories)
+        bar_data = model.visualize_topics_per_class(topics_per_class, top_n_topics=10, width=900,height=500)
+        st.plotly_chart(bar_data)
+
+        heatmap = model.visualize_heatmap(n_clusters=2, top_n_topics=10, width=900,height=500)
+        st.plotly_chart(heatmap)
+        
+    
     with st.expander("Extracted papers"):
         st.dataframe(public)
         csv = Scarp.convert_df(public)
@@ -224,6 +263,9 @@ def show_portrait():
         file_name=file_name_value,
         mime='text/csv',
     )
+
+
+
     colsite,colauth = st.columns([2,3])
     with colsite:
         percentage_sites = {}
@@ -424,4 +466,5 @@ def show_portrait():
                         }
                     ]
                 )
+                    
                     
